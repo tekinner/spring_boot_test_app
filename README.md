@@ -7,4 +7,4 @@ Functionalities:
 - Produces message to kafka topic (not completed)
 - Run application on docker using docker-compose file
 
-@ertekin
+@tekinner
