@@ -1,0 +1,65 @@
+version: "3"
+
+services:
+
+  test_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: test_app
+    ports:
+      - 8181:8181
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      APP_NAME: hc-rewards-ledger
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: test_db
+      DB_USER: test
+      DB_PWD: test
+      BOOTSTRAP_SERVER: kafka:9092
+      SPRING_PROFILES_ACTIVE: local
+    command: java -jar /app/app.jar
+
+  postgres:
+    build: ./postgres
+#    image: postgres
+    volumes:
+      - db-testdata:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - 5432:5432
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    ports:
+      - 2182:2182
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2182
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    ports:
+      - 9093:9093
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+volumes:
+  db-testdata:
